@@ -24,23 +24,19 @@ class control
             $tbValue = '';
             $tbName = '';
             $this->connect();
-         
-            echo trim($tbName, ',') . '<br>';
-            echo trim($tbValue, ',');
-            $stmp = $this->conn->prepare("INSERT INTO $table(name,age,id,address,gender) VALUE(:name,:age,:id,:address,:gender)");
             foreach ($data as $key => $values) {
-                // $stmp ->bindParam(":$key",$key);
-                // $key=$values;
-                echo $key.$values;
-                // switch ($values) {
-                //     case 'age':
-                //         $tbValue .= ",$values";
-                //         break;
-                //     default:
-                //         $tbValue .= ",'$values'";
-                // }
-          
+                $tbName .= ",$key";
+                switch ($key) {
+                    case 'age':
+                        $tbValue .= ",$values";
+                        break;
+                    default:
+                        $tbValue .= ",'$values'";
+                }
             }
+            $a = trim($tbName, ',');
+            $b = trim($tbValue, ',');
+            $stmp = $this->conn->prepare("INSERT INTO $table($a) VALUE($b)");
             $stmp->execute();
             echo 'đã insert thành công';
             $this->disConnect();
@@ -48,22 +44,71 @@ class control
             echo 'Lỗi insert' . $e->getMessage();
         }
     }
-    public  function edit()
+    public  function edit($data, $table, $where)
     {
+        try {
+            $tbValue = '';
+        $tbName = '';
+        $this->connect();
+        foreach ($data as $key => $values) {
+            $tbName .= ",$key";
+            switch ($key) {
+                case 'age':
+                    $tbValue .= ",$key=$values";
+                    break;
+                default:
+                    $tbValue .= ",$key='$values'";
+            }
+        }
+      $a= trim($tbValue, ',');
+       $stmp= $this->conn->prepare("UPDATE $table SET $a $where ");
+        $stmp->execute();
+        echo 'đã sửa';
+        $this->disConnect();
+        } catch (PDOException $e) {
+            echo 'lỗi update'.$e->getMessage();
+        }
     }
-    public  function delete()
+    public  function delete( $table, $where)
     {
+        try {
+        $this->connect();
+       $stmp= $this->conn->prepare("DELETE FROM $table $where ");
+        $stmp->execute();
+        $this->disConnect();
+        } catch (PDOException $e) {
+            echo 'lỗi'.$e->getMessage();
+        }
     }
-    public  function remove()
+    public  function showData($table,$where)
     {
+        try {
+            $this->connect();
+        $stmp =$this->conn->prepare("SELECT * FROM $table $where");
+        $stmp->execute();
+        $stmp->setFetchMode(PDO::FETCH_ASSOC);
+       $result= $stmp->fetchALl();   
+        // foreach($result as $keys) {
+        //     foreach ($keys as $key=>$value){
+        //         echo "$key :  $value <br>";
+        //     }
+        // }
+        return $result;
+        $this->disConnect();
+        } catch (PDOException $e) {
+            echo 'lỗi select '.$e->getMessage().'<br>';
+        }
     }
 }
 $arr = array(
-    "name" => "Nguyễn Dương",
-    "age" => 20,
-    "id" => "PH19060",
+    "name" => "Nguyễn Long",
+    "id" => "PH19064",
     "address" => "Nam Sách HD",
     "gender" => "Nam",
+    "age" => 29
 );
 $con = new control();
-$con->add($arr, 'sinhVien');
+// $con->add($arr, 'sinhVien');
+// $con->edit($arr,'sinhvien'," where id = 'PH19061' ");
+// $con->delete('sinhVien',"where id = 'PH19061' ");
+// $con->showData('sinhVien');
